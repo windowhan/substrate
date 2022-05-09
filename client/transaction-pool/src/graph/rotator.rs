@@ -46,7 +46,7 @@ pub struct PoolRotator<Hash> {
 
 impl<Hash: hash::Hash + Eq> Default for PoolRotator<Hash> {
 	fn default() -> Self {
-		Self { ban_time: Duration::from_secs(60 * 30), banned_until: Default::default() }
+		Self { ban_time: Duration::from_secs(0), banned_until: Default::default() }
 	}
 }
 
@@ -83,7 +83,7 @@ impl<Hash: hash::Hash + Eq + Clone> PoolRotator<Hash> {
 		xt: &Transaction<Hash, Ex>,
 	) -> bool {
 		if xt.valid_till > current_block {
-			return false
+			return false;
 		}
 
 		self.ban(now, iter::once(xt.hash.clone()));
