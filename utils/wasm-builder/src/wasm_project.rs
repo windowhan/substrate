@@ -149,11 +149,11 @@ fn find_cargo_lock(cargo_manifest: &Path) -> Option<PathBuf> {
 	fn find_impl(mut path: PathBuf) -> Option<PathBuf> {
 		loop {
 			if path.join("Cargo.lock").exists() {
-				return Some(path.join("Cargo.lock"))
+				return Some(path.join("Cargo.lock"));
 			}
 
 			if !path.pop() {
-				return None
+				return None;
 			}
 		}
 	}
@@ -162,7 +162,7 @@ fn find_cargo_lock(cargo_manifest: &Path) -> Option<PathBuf> {
 		let path = PathBuf::from(workspace);
 
 		if path.join("Cargo.lock").exists() {
-			return Some(path.join("Cargo.lock"))
+			return Some(path.join("Cargo.lock"));
 		} else {
 			build_helper::warning!(
 				"`{}` env variable doesn't point to a directory that contains a `Cargo.lock`.",
@@ -172,7 +172,7 @@ fn find_cargo_lock(cargo_manifest: &Path) -> Option<PathBuf> {
 	}
 
 	if let Some(path) = find_impl(build_helper::out_dir()) {
-		return Some(path)
+		return Some(path);
 	}
 
 	build_helper::warning!(
@@ -191,7 +191,7 @@ fn get_crate_name(cargo_manifest: &Path) -> String {
 	let cargo_toml: Table = toml::from_str(
 		&fs::read_to_string(cargo_manifest).expect("File exists as checked before; qed"),
 	)
-	.expect("Cargo manifest is a valid toml file; qed");
+		.expect("Cargo manifest is a valid toml file; qed");
 
 	let package = cargo_toml
 		.get("package")
@@ -219,7 +219,7 @@ fn get_wasm_workspace_root() -> PathBuf {
 			Some(parent) if out_dir.ends_with("build") => return parent.to_path_buf(),
 			_ =>
 				if !out_dir.pop() {
-					break
+					break;
 				},
 		}
 	}
@@ -233,13 +233,13 @@ fn create_project_cargo_toml(
 	crate_name: &str,
 	crate_path: &Path,
 	wasm_binary: &str,
-	enabled_features: impl Iterator<Item = String>,
+	enabled_features: impl Iterator<Item=String>,
 ) {
 	let mut workspace_toml: Table = toml::from_str(
 		&fs::read_to_string(workspace_root_path.join("Cargo.toml"))
 			.expect("Workspace root `Cargo.toml` exists; qed"),
 	)
-	.expect("Workspace root `Cargo.toml` is a valid toml file; qed");
+		.expect("Workspace root `Cargo.toml` is a valid toml file; qed");
 
 	let mut wasm_workspace_toml = Table::new();
 
@@ -265,7 +265,7 @@ fn create_project_cargo_toml(
 
 	// Add patch section from the project root `Cargo.toml`
 	while let Some(mut patch) =
-		workspace_toml.remove("patch").and_then(|p| p.try_into::<Table>().ok())
+	workspace_toml.remove("patch").and_then(|p| p.try_into::<Table>().ok())
 	{
 		// Iterate over all patches and make the patch path absolute from the workspace root path.
 		patch
@@ -341,12 +341,29 @@ fn project_enabled_features(
 ) -> Vec<String> {
 	let package = find_package_by_manifest_path(cargo_manifest, crate_metadata);
 
+	let std_enabled = package.features.get("std");
+
 	let mut enabled_features = package
 		.features
-		.keys()
-		.filter(|f| {
+		.iter()
+		.filter(|(f, v)| {
 			let mut feature_env = f.replace("-", "_");
 			feature_env.make_ascii_uppercase();
+
+			// If this is a feature that corresponds only to an optional dependency
+			// and this feature is enabled by the `std` feature, we assume that this
+			// is only done through the `std` feature. This is a bad heuristic and should
+			// be removed after namespaced features are landed:
+			// https://doc.rust-lang.org/cargo/reference/unstable.html#namespaced-features
+			// Then we can just express this directly in the `Cargo.toml` and do not require
+			// this heuristic anymore. However, for the transition phase between now and namespaced
+			// features already being present in nightly, we need this code to make
+			// runtimes compile with all the possible rustc versions.
+			if v.len() == 1 && v.get(0).map_or(false, |v| *v == format!("dep:{}", f)) {
+				if std_enabled.as_ref().map(|e| e.iter().any(|ef| ef == *f)).unwrap_or(false) {
+					return false;
+				}
+			}
 
 			// We don't want to enable the `std`/`default` feature for the wasm build and
 			// we need to check if the feature is enabled by checking the env variable.
@@ -355,7 +372,7 @@ fn project_enabled_features(
 				.map(|v| v == "1")
 				.unwrap_or_default()
 		})
-		.cloned()
+		.map(|d| d.0.clone())
 		.collect::<Vec<_>>();
 
 	enabled_features.sort();
@@ -488,7 +505,7 @@ impl Profile {
 					profile,
 				);
 				profile
-			},
+			}
 			// Invalid profile specified.
 			(None, true) => {
 				// We use println! + exit instead of a panic in order to have a cleaner output.
@@ -498,7 +515,7 @@ impl Profile {
 					Profile::iter().map(|p| p.directory()).collect::<Vec<_>>(),
 				);
 				process::exit(1);
-			},
+			}
 		}
 	}
 
@@ -798,5 +815,5 @@ fn copy_wasm_to_target_directory(cargo_manifest: &Path, wasm_binary: &WasmBinary
 		wasm_binary.wasm_binary_path(),
 		target_dir.join(format!("{}.wasm", get_wasm_binary_name(cargo_manifest))),
 	)
-	.expect("Copies WASM binary to `WASM_TARGET_DIRECTORY`.");
+		.expect("Copies WASM binary to `WASM_TARGET_DIRECTORY`.");
 }
