@@ -1118,7 +1118,6 @@ impl pallet_im_online::Config for Runtime {
 	type AuthorityId = ImOnlineId;
 	type Event = Event;
 	type NextSessionRotation = Babe;
-	type OnLivenessHandler = ();
 	type ValidatorSet = Historical;
 	type ReportUnresponsiveness = Offences;
 	type UnsignedPriority = ImOnlineUnsignedPriority;

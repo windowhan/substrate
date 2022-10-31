@@ -351,9 +351,6 @@ pub mod pallet {
 		/// chance the authority will produce a block and they won't be necessary.
 		type NextSessionRotation: EstimateNextSessionRotation<Self::BlockNumber>;
 
-		/// A type handling validator liveness, which is online/offline
-		type OnLivenessHandler: ValidatorLivenessHandler<Self::AccountId>;
-
 		/// A type that gives us the ability to submit unresponsiveness offence reports.
 		type ReportUnresponsiveness: ReportOffence<
 			Self::AccountId,
@@ -909,9 +906,6 @@ impl<T: Config> OneSessionHandler<T::AccountId> for Pallet<T> {
 		if offenders.is_empty() {
 			Self::deposit_event(Event::<T>::AllGood);
 		} else {
-			for offender in offenders.clone() {
-				T::OnLivenessHandler::set_offline(offender.0.into());
-			}
 			Self::deposit_event(Event::<T>::SomeOffline { offline: offenders.clone() });
 
 			let validator_set_count = keys.len() as u32;
