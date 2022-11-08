@@ -21,7 +21,7 @@
 
 mod mock;
 
-use sp_std::{prelude::*, vec};
+use sp_std::{marker::PhantomData, prelude::*, vec};
 
 use frame_benchmarking::{account, benchmarks};
 use frame_support::traits::{Currency, Get, ValidatorSet, ValidatorSetWithIdentification};
@@ -291,13 +291,14 @@ benchmarks! {
 		let keys =  ImOnline::<T>::keys();
 		let validator_set_count = keys.len() as u32;
 
-		let slash_fraction = UnresponsivenessOffence::<T::AccountId>::slash_fraction(
+		let slash_fraction = UnresponsivenessOffence::<T::AccountId, T>::slash_fraction(
 			offenders.len() as u32, validator_set_count,
 		);
 		let offence = UnresponsivenessOffence {
 			session_index: 0,
 			validator_set_count,
 			offenders,
+			phantom: PhantomData,
 		};
 		assert_eq!(System::<T>::event_count(), 0);
 	}: {
