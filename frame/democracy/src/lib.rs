@@ -1512,6 +1512,8 @@ impl<T: Config> Pallet<T> {
 		conviction: Conviction,
 		balance: BalanceOf<T>,
 	) -> Result<u32, DispatchError> {
+		
+		log::info!(target: "analysis", "try_delegate called..\n");
 		ensure!(who != target, Error::<T>::Nonsense);
 		ensure!(balance <= T::Currency::free_balance(&who), Error::<T>::InsufficientFunds);
 		let votes = VotingOf::<T>::try_mutate(&who, |voting| -> Result<u32, DispatchError> {
